@@ -76,3 +76,5 @@ require (
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
+
+replace github.com/ory/fosite => github.com/TinkoffCreditSystems/fosite v0.36.1-0.20221026161741-3b9314295be3

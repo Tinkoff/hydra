@@ -67,6 +67,7 @@ Janitor can be used in several ways.
 	cmd.Flags().Bool(cli.OnlyTokens, false, "This will only run the cleanup on tokens and will skip requests and trust relationships cleanup.")
 	cmd.Flags().Bool(cli.OnlyGrants, false, "This will only run the cleanup on trust relationships and will skip requests and token cleanup.")
 	cmd.Flags().BoolP(cli.ReadFromEnv, "e", false, "If set, reads the database connection string from the environment variable DSN or config file key dsn.")
+	cmd.Flags().Bool(cli.OnlyLoginSessions, false, "This will only run the cleanup on login sessions and will skip requests and token cleanup.")
 	configx.RegisterFlags(cmd.PersistentFlags())
 	return cmd
 

@@ -398,6 +398,8 @@ func (p *Persister) flushInactiveTokens(ctx context.Context, notAfter time.Time,
 		return errorsx.WithStack(err)
 	}
 
+	p.l.WithField("tokens_count", len(signatures)).Infof("get %d inactive tokens for delete", len(signatures))
+
 	// Delete tokens in batch
 	var err error
 	for i := 0; i < len(signatures); i += batchSize {

@@ -18,6 +18,8 @@ import (
 
 var _ trust.GrantManager = &Persister{}
 
+const scopeSeparator = " "
+
 func (p *Persister) CreateGrant(ctx context.Context, g trust.Grant, publicKey jose.JSONWebKey) error {
 	return p.transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		// add key, if it doesn't exist
@@ -168,7 +170,7 @@ func (p *Persister) sqlDataFromJWTGrant(g trust.Grant) trust.SQLData {
 		Issuer:          g.Issuer,
 		Subject:         g.Subject,
 		AllowAnySubject: g.AllowAnySubject,
-		Scope:           strings.Join(g.Scope, "|"),
+		Scope:           strings.Join(g.Scope, scopeSeparator),
 		KeySet:          g.PublicKey.Set,
 		KeyID:           g.PublicKey.KeyID,
 		CreatedAt:       g.CreatedAt,
@@ -182,7 +184,7 @@ func (p *Persister) jwtGrantFromSQlData(data trust.SQLData) trust.Grant {
 		Issuer:          data.Issuer,
 		Subject:         data.Subject,
 		AllowAnySubject: data.AllowAnySubject,
-		Scope:           stringsx.Splitx(data.Scope, "|"),
+		Scope:           stringsx.Splitx(data.Scope, scopeSeparator),
 		PublicKey: trust.PublicKey{
 			Set:   data.KeySet,
 			KeyID: data.KeyID,

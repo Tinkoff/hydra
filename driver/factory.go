@@ -2,8 +2,10 @@ package driver
 
 import (
 	"context"
+	"os"
 
 	"github.com/ory/x/configx"
+	"github.com/sirupsen/logrus"
 
 	"github.com/ory/x/logrusx"
 
@@ -51,13 +53,37 @@ func DisablePreloading() OptionsModifier {
 	}
 }
 
+func getLoggerFields() logrus.Fields {
+	fields := logrus.Fields{}
+
+	if v := os.Getenv("APP_ENV"); v != "" {
+		fields["env"] = v
+	}
+	if v := os.Getenv("SYSTEM_NAME"); v != "" {
+		fields["system"] = v
+	}
+	if v := os.Getenv("POD_NAME"); v != "" {
+		fields["inst"] = v
+	}
+	if v := os.Getenv("CONTAINER_NAME"); v != "" {
+		fields["container_name"] = v
+	}
+	if v := os.Getenv("NAMESPACE_NAME"); v != "" {
+		fields["namespace"] = v
+	}
+
+	return fields
+}
+
 func New(ctx context.Context, opts ...OptionsModifier) Registry {
 	o := newOptions()
 	for _, f := range opts {
 		f(o)
 	}
 
-	l := logrusx.New("Ory Hydra", config.Version)
+	l := logrusx.New("Ory Hydra", config.Version).
+		WithFields(getLoggerFields())
+
 	c, err := config.New(ctx, l, o.opts...)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to instantiate configuration.")

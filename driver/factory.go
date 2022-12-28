@@ -56,19 +56,19 @@ func DisablePreloading() OptionsModifier {
 func getLoggerFields() logrus.Fields {
 	fields := logrus.Fields{}
 
-	if v := os.Getenv("APP_ENV"); v != "" {
+	if v, ok := os.LookupEnv("APP_ENV"); ok {
 		fields["env"] = v
 	}
-	if v := os.Getenv("SYSTEM_NAME"); v != "" {
+	if v, ok := os.LookupEnv("SYSTEM_NAME"); ok {
 		fields["system"] = v
 	}
-	if v := os.Getenv("POD_NAME"); v != "" {
+	if v, ok := os.LookupEnv("POD_NAME"); ok {
 		fields["inst"] = v
 	}
-	if v := os.Getenv("CONTAINER_NAME"); v != "" {
+	if v, ok := os.LookupEnv("CONTAINER_NAME"); ok {
 		fields["container_name"] = v
 	}
-	if v := os.Getenv("NAMESPACE_NAME"); v != "" {
+	if v, ok := os.LookupEnv("NAMESPACE_NAME"); ok {
 		fields["namespace"] = v
 	}
 

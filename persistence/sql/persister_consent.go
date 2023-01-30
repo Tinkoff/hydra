@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
@@ -453,6 +454,8 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 
 		ids := []string{}
 
+		idFrom, idTo := idRange()
+
 		q := p.Connection(ctx).RawQuery(
 			fmt.Sprintf(`
 			SELECT id
@@ -469,11 +472,14 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 			    FROM %[3]s
 			    WHERE %[3]s.login_session_id = %[1]s.id
 			    )
-			LIMIT %[4]d
+			AND %[1]s.id > %[4]s AND %[1]s.id < %[5]s
+			LIMIT %[6]d
 			`,
 				(&ls).TableName(),
 				(&lr).TableName(),
 				(&cr).TableName(),
+				idFrom,
+				idTo,
 				limit,
 			),
 		)
@@ -485,7 +491,9 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 			return sqlcon.HandleError(err)
 		}
 
-		p.l.WithField("sessions_count", len(ids)).Infof("get %d sessions for delete", len(ids))
+		p.l.WithField("sessions_count", len(ids)).
+			WithField("ids_range", fmt.Sprintf("%s:%s", idFrom, idTo)).
+			Infof("get %d sessions for delete", len(ids))
 
 		for i := 0; i < len(ids); i += batchSize {
 			j := i + batchSize
@@ -600,4 +608,13 @@ func (p *Persister) FlushInactiveLoginConsentRequests(ctx context.Context, notAf
 	}
 
 	return nil
+}
+
+func idRange() (string, string) {
+	symbols := "0123456789abcdefg"
+
+	rand.Seed(time.Now().UnixNano())
+	idx := rand.Intn(len(symbols) - 1)
+
+	return string(symbols[idx]), string(symbols[idx+1])
 }

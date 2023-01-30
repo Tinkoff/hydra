@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/gobuffalo/pop/v6"
@@ -441,7 +440,7 @@ func (p *Persister) VerifyAndInvalidateLogoutRequest(ctx context.Context, verifi
 	})
 }
 
-func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time, limit, batchSize int) error {
+func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, notAfter time.Time, limit, batchSize int) error {
 	return p.transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		// "hydra_oauth2_authentication_request"
 		var lr consent.LoginRequest
@@ -454,34 +453,35 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 
 		ids := []string{}
 
-		idFrom, idTo := idRange()
-
 		q := p.Connection(ctx).RawQuery(
 			fmt.Sprintf(`
 			SELECT id
 			FROM %[1]s
-			WHERE NOT EXISTS
-			    (
-			    SELECT NULL
-			    FROM %[2]s
-			    WHERE %[2]s.login_session_id = %[1]s.id
-			    )
-			AND NOT EXISTS
-			    (
-			    SELECT NULL
-			    FROM %[3]s
-			    WHERE %[3]s.login_session_id = %[1]s.id
-			    )
-			AND %[1]s.id > %[4]s AND %[1]s.id < %[5]s
-			LIMIT %[6]d
+			WHERE
+			(
+			    %[1]s.authenticated_at IS NULL
+				AND NOT EXISTS
+					(
+					SELECT NULL
+					FROM %[2]s
+					WHERE %[2]s.login_session_id = %[1]s.id
+					)
+				AND NOT EXISTS
+					(
+					SELECT NULL
+					FROM %[3]s
+					WHERE %[3]s.login_session_id = %[1]s.id
+					)
+			)
+			OR %[1]s.authenticated_at < ?
+			LIMIT %[4]d
 			`,
 				(&ls).TableName(),
 				(&lr).TableName(),
 				(&cr).TableName(),
-				idFrom,
-				idTo,
 				limit,
 			),
+			notAfter,
 		)
 		if err := q.All(&ids); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -491,9 +491,7 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 			return sqlcon.HandleError(err)
 		}
 
-		p.l.WithField("sessions_count", len(ids)).
-			WithField("ids_range", fmt.Sprintf("%s:%s", idFrom, idTo)).
-			Infof("get %d sessions for delete", len(ids))
+		p.l.WithField("sessions_count", len(ids)).Infof("get %d sessions for delete", len(ids))
 
 		for i := 0; i < len(ids); i += batchSize {
 			j := i + batchSize
@@ -608,13 +606,4 @@ func (p *Persister) FlushInactiveLoginConsentRequests(ctx context.Context, notAf
 	}
 
 	return nil
-}
-
-func idRange() (string, string) {
-	symbols := "0123456789abcdefg"
-
-	rand.Seed(time.Now().UnixNano())
-	idx := rand.Intn(len(symbols) - 1)
-
-	return string(symbols[idx]), string(symbols[idx+1])
 }

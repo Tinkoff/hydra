@@ -14,6 +14,7 @@ replace (
 )
 
 require (
+	github.com/Tinkoff/logrus-sage-formatter v0.0.0-20230201084633-e547158441b3
 	github.com/cenkalti/backoff/v3 v3.0.0
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/go-bindata/go-bindata v3.1.2+incompatible

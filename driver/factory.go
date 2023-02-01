@@ -3,11 +3,10 @@ package driver
 import (
 	"context"
 
-	"github.com/ory/x/configx"
-
-	"github.com/ory/x/logrusx"
-
+	sageformatter "github.com/Tinkoff/logrus-sage-formatter"
 	"github.com/ory/hydra/driver/config"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/logrusx"
 )
 
 type options struct {
@@ -57,7 +56,11 @@ func New(ctx context.Context, opts ...OptionsModifier) Registry {
 		f(o)
 	}
 
-	l := logrusx.New("ORY Hydra", config.Version)
+	l := logrusx.New(
+		"ORY Hydra",
+		config.Version,
+		logrusx.ForceFormatter(sageformatter.NewFormatter(sageformatter.MetadataFromEnv)),
+	)
 	c, err := config.New(l, o.opts...)
 	if err != nil {
 		l.WithError(err).Fatal("Unable to instantiate configuration.")

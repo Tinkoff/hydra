@@ -453,11 +453,6 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, notAfter tim
 
 		ids := []string{}
 
-		dayBefore := time.Now().Add(-24 * time.Hour)
-		if notAfter.After(dayBefore) {
-			notAfter = dayBefore
-		}
-
 		q := p.Connection(ctx).RawQuery(
 			fmt.Sprintf(`
 			SELECT id

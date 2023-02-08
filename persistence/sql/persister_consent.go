@@ -439,7 +439,7 @@ func (p *Persister) VerifyAndInvalidateLogoutRequest(ctx context.Context, verifi
 	})
 }
 
-func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time, limit, batchSize int) error {
+func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, notAfter time.Time, limit, batchSize int) error {
 	return p.transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
 		// "hydra_oauth2_authentication_request"
 		var lr consent.LoginRequest
@@ -456,18 +456,23 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 			fmt.Sprintf(`
 			SELECT id
 			FROM %[1]s
-			WHERE NOT EXISTS
-			    (
-			    SELECT NULL
-			    FROM %[2]s
-			    WHERE %[2]s.login_session_id = %[1]s.id
-			    )
-			AND NOT EXISTS
-			    (
-			    SELECT NULL
-			    FROM %[3]s
-			    WHERE %[3]s.login_session_id = %[1]s.id
-			    )
+			WHERE
+			(
+			    %[1]s.authenticated_at IS NULL
+				AND NOT EXISTS
+					(
+					SELECT NULL
+					FROM %[2]s
+					WHERE %[2]s.login_session_id = %[1]s.id
+					)
+				AND NOT EXISTS
+					(
+					SELECT NULL
+					FROM %[3]s
+					WHERE %[3]s.login_session_id = %[1]s.id
+					)
+			)
+			OR %[1]s.authenticated_at < ?
 			LIMIT %[4]d
 			`,
 				(&ls).TableName(),
@@ -475,6 +480,7 @@ func (p *Persister) FlushInactiveLoginSessions(ctx context.Context, _ time.Time,
 				(&cr).TableName(),
 				limit,
 			),
+			notAfter,
 		)
 		if err := q.All(&ids); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {

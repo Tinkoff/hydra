@@ -14,6 +14,7 @@ replace (
 )
 
 require (
+	github.com/Tinkoff/logrus-sage-formatter v0.0.0-20230201084633-e547158441b3
 	github.com/cenkalti/backoff/v3 v3.0.0
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
@@ -79,6 +80,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/caarlos0/env/v6 v6.7.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/cockroach-go/v2 v2.2.1 // indirect
@@ -221,7 +223,7 @@ require (
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211020174200-9d6173849985 // indirect
+	golang.org/x/sys v0.0.0-20211102192858-4dd72447c267 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
